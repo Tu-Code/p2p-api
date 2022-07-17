@@ -11,7 +11,7 @@ const Transaction = sequelize.define('transactions', {
     },
     this_user: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: false
     },
     user_choice: {
         type: DataTypes.STRING,
@@ -19,6 +19,10 @@ const Transaction = sequelize.define('transactions', {
     },
     amount: {
         type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    reference: {
+        type: DataTypes.STRING,
         allowNull: false
     }
 })

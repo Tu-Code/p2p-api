@@ -1,5 +1,5 @@
 const paystack = (request) => {
-    const MySecretKey = 'sk_test_8f311084a17072f23b3d2a85544428bff469c060';
+    const MySecretKey = 'Bearer sk_test_8f311084a17072f23b3d2a85544428bff469c060';
     //sk_test_xxxx to be replaced by your own secret key
     const initializePayment = (form, mycallback) => {
         const option = {
@@ -16,6 +16,7 @@ const paystack = (request) => {
         }
         request.post(option, callback);
     }
+
     const verifyPayment = (ref,mycallback) => {
         const option = {
             url : 'https://api.paystack.co/transaction/verify/' + encodeURIComponent(ref),

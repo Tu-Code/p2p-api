@@ -3,10 +3,13 @@ const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const User = require('../models/User');
 const Session = require('../models/Session');
+const Transaction = require('../models/Transaction');
 const jwt = require('jsonwebtoken');
 const { workerData } = require('worker_threads');
 const request = require('request');
 const {initializePayment, verifyPayment} = require('../../config/paystack')(request);
+const _ = require('lodash');
+const { response } = require('express');
 
 exports.login = (req, res, next) => {
 	try {
@@ -127,40 +130,51 @@ exports.forgotPassword = (req, res, next) => {
 	});
 };
 
+user_choice = ''
+exports.fundAccount = (req, res, next) => {
+	// res.json({"Check": "hey"})
+	// const validationErrors = [];
+	// // pass token here as variable, if exists - work, if not - don't
+	// if (req.body.amount < 0) validationErrors.push('Invalid amount.');
+	// if (validator.isEmpty(req.body.user_choice)) validationErrors.push('User choice cannot be blank.');
+	// if (validationErrors.length) {
+	// 	return res.json({ 'Error': validationErrors });
+	// }
+	const form = _.pick(req.body,['email','amount','full_name']);
+    form.metadata = {
+        full_name : form.full_name
+    }
+    form.amount *= 100;
+    user_choice = form.email
+    initializePayment(form, (error, body)=>{
+        if(error){
+            //handle errors
+            console.log(error);
+            return;
+        }
+    	resp = JSON.parse(body);
+        return res.json({"Checkout link" : resp.data.authorization_url})
+    });
+};
 
-exports.fund_account = (req, res, next) => {
-	const validationErrors = [];
-	// pass token here as variable, if exists - work, if not - don't
-	if (req.body.amount < 0) validationErrors.push('Invalid amount.');
-	if (validator.isEmpty(req.body.user_choice)) validationErrors.push('User choice cannot be blank.');
-	if (validationErrors.length) {
-		return res.json({ 'Error': validationErrors });
-	}
-	User.findOne({
-		where: {
-			email: req.body.user_choice
-		}
-	}).then(user => {
-		if (user) {
-			const form = _.pick(req.body,['user_choice', 'amount']);
-			form.metadata = {
-				user_choice : form.user_choice
-			}
-			form.amount *= 100;
-			initializePayment(form, (error, body)=>{
-				if(error){
-					//handle errors
-					console.log(error);
-					return;
-				}
-				response = JSON.parse(body);
-				res.redirect(response.data.authorization_url)
-			});		
-			return transaction.save()
-		} 
-		else {
-			return res.json({ 'Error': 'Funding error' });
-		}
-	})
-		.catch(err => console.log(err));
+exports.callback = (req, res, next) => {
+	
+	const ref = req.query.reference;
+    verifyPayment(ref, (error,body)=>{
+        if(error){
+            //handle errors appropriately
+            console.log(error)
+            return res.json({"error": error});
+        }
+        resp = JSON.parse(body);
+        const data = _.at(resp.data, ['reference', 'amount','customer.email', 'metadata.full_name']);
+        [reference, amount, email, full_name] = data;
+        let this_user = email
+		newTransaction = {this_user, user_choice, amount, reference}
+
+        const transaction = new Transaction(newTransaction)
+		console.log(newTransaction)
+
+        return transaction.save()
+    })
 };
