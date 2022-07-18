@@ -10,6 +10,7 @@ const request = require('request');
 const {initializePayment, verifyPayment} = require('../../config/paystack')(request);
 const _ = require('lodash');
 const { response } = require('express');
+const { method } = require('lodash');
 
 exports.login = (req, res, next) => {
 	try {
@@ -19,8 +20,6 @@ exports.login = (req, res, next) => {
 		if (validationErrors.length) {
 			return res.json({ 'Error': validationErrors });
 		}
-
-
 		User.findOne({
 			where: {
 				email: req.body.inputEmail
@@ -130,51 +129,140 @@ exports.forgotPassword = (req, res, next) => {
 	});
 };
 
+let fundOrTrans = ''
+let amountToRecord = 0
+
+exports.transfer = (req, res, next) => {
+	User.findOne({
+		where: {
+			email: req.body.email
+		}
+	}).then(user => {
+		if (user) {
+			const validationErrors = [];
+			if (req.body.amount < 0) validationErrors.push('Invalid amount.');
+			if (validator.isEmpty(req.body.email)) validationErrors.push('User choice cannot be blank.');
+			if (validationErrors.length) {
+				return res.json({ 'Error': validationErrors });
+			}
+			const form = _.pick(req.body,['email','amount','full_name']);
+			form.metadata = {
+				full_name : form.full_name
+			}
+
+			if (form.amount <= user.balance){
+				fundOrTrans = 'trans'
+				amountToRecord = form.amount
+				form.amount *= 100;
+				initializePayment(form, (error, body)=>{
+					if(error){
+						console.log(error);
+						return;
+					}
+					resp = JSON.parse(body);
+					bal = user.balance
+					
+					return res.json({
+						"Checkout link" : resp.data.authorization_url,
+						"Account balance before transfer": bal
+					})
+				});
+			} else {
+				return res.json({"Error": "Insufficient funds."})
+			}
+			
+		} else {
+			return res.json({ 'Error': 'Invalid user choice.' });
+		}
+	})
+	.catch(err => console.log(err));
+};
+
+bal = 0
+let userObj = {}
 user_choice = ''
+
 exports.fundAccount = (req, res, next) => {
-	// res.json({"Check": "hey"})
-	// const validationErrors = [];
-	// // pass token here as variable, if exists - work, if not - don't
-	// if (req.body.amount < 0) validationErrors.push('Invalid amount.');
-	// if (validator.isEmpty(req.body.user_choice)) validationErrors.push('User choice cannot be blank.');
-	// if (validationErrors.length) {
-	// 	return res.json({ 'Error': validationErrors });
-	// }
-	const form = _.pick(req.body,['email','amount','full_name']);
-    form.metadata = {
-        full_name : form.full_name
-    }
-    form.amount *= 100;
-    user_choice = form.email
-    initializePayment(form, (error, body)=>{
-        if(error){
-            //handle errors
-            console.log(error);
-            return;
-        }
-    	resp = JSON.parse(body);
-        return res.json({"Checkout link" : resp.data.authorization_url})
-    });
+	User.findOne({
+		where: {
+			email: req.body.email
+		}
+	}).then(user => {
+		if (user) {
+			userObj = user
+			const validationErrors = [];
+			if (req.body.amount < 0) validationErrors.push('Invalid amount.');
+			if (validator.isEmpty(req.body.email)) validationErrors.push('User choice cannot be blank.');
+			if (validationErrors.length) {
+				return res.json({ 'Error': validationErrors });
+			}
+			const form = _.pick(req.body,['email','amount','full_name']);
+			if (form.email == user.email){
+				form.metadata = {
+					full_name : form.full_name
+				}
+				amountToRecord = form.amount
+				form.amount *= 100;
+				user_choice = form.email
+				fundOrTrans = 'fund'
+				initializePayment(form, (error, body)=>{
+					if(error){
+						console.log(error);
+						return;
+					}
+					resp = JSON.parse(body);
+					bal = user.balance
+					
+					return res.json({
+						"Checkout link" : resp.data.authorization_url,
+						"Account balance before fund": bal
+					})
+				});
+			}
+			else{
+				return res.json({"Error": "Not your email."})
+			}
+		} 
+		else {
+			return res.json({ 'Error': 'Invalid user choice.' });
+		}
+	})
+	.catch(err => console.log(err));
 };
 
 exports.callback = (req, res, next) => {
-	
 	const ref = req.query.reference;
     verifyPayment(ref, (error,body)=>{
         if(error){
-            //handle errors appropriately
             console.log(error)
             return res.json({"error": error});
         }
         resp = JSON.parse(body);
         const data = _.at(resp.data, ['reference', 'amount','customer.email', 'metadata.full_name']);
         [reference, amount, email, full_name] = data;
-        let this_user = email
+		let this_user = email
 		newTransaction = {this_user, user_choice, amount, reference}
-
         const transaction = new Transaction(newTransaction)
-		console.log(newTransaction)
+		console.log("Amount to record " + amountToRecord)
 
-        return transaction.save()
+		if (fundOrTrans == 'fund'){
+			User.upsert({
+				id: userObj.id,
+				balance: bal + amountToRecord,
+			});
+			return transaction.save()
+		}
+		else if (fundOrTrans == 'trans'){
+			User.upsert({
+				id: userObj.id,
+				balance: bal -  amountToRecord,
+			});
+			return transaction.save()
+		}
+		else{
+			return res.json({"Error": "No transaction recorded"})
+		}
+        
     })
 };
+
