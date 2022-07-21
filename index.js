@@ -51,7 +51,7 @@ sequelize
 	// .sync({force : true})
 	.sync()
 	.then(() => {
-		app.listen(process.env.PORT || 3000);
+		app.listen(process.env.PORT);
 		//pending set timezone
 		console.log("App listening on port " + process.env.PORT);
 	})
