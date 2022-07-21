@@ -12,6 +12,10 @@ const _ = require('lodash');
 const { response } = require('express');
 const { method } = require('lodash');
 
+exports.home = (req, res, next) => {
+	return res.json({"Message":"Home Page"});
+};
+
 exports.login = (req, res, next) => {
 	try {
 		const validationErrors = [];

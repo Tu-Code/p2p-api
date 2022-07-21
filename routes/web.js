@@ -10,6 +10,8 @@ router.post('/sign-up', AuthController.signUp);
 router.post('/fund-account', isAuth, AuthController.fundAccount);
 router.post('/transfer', isAuth, AuthController.transfer);
 router.post('/forgot-password', isAuth, AuthController.forgotPassword);
+
+router.get('/', AuthController.home);
 router.get('/callback', AuthController.callback);
 router.get('/locked-endpoint', isAuth, (req, res) => {
 	res.send("Logged in, welcome, user id is: " + req.user_id)
