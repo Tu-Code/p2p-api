@@ -72,7 +72,7 @@ exports.logout = (req, res, next) => {
 	}
 };
 
-exports.signUp = (req, res, next) => {
+exports.user = (req, res, next) => {
 	User.findOne({
 		where: {
 			email: req.body.email

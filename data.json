@@ -5,9 +5,5 @@
         "phone": "1234",
         "password": "pwd123",
         "_csrf": "dqeChBBi-WmnnhjLXDuNdXnPezexz_-qW5rs"
-    },
-    {
-        "inputEmail": "hawa@gmail.com",
-        "inputPassword": "pwd123"
-    }
+    }    
 ]
