@@ -12,7 +12,7 @@ const _ = require('lodash');
 const { response } = require('express');
 const { method } = require('lodash');
 
-exports.login = (req, res, next) => {
+exports.login = async (req, res, next) => {
 	try {
 		const {email, password} = req.body
 		const existingUser = await User.findOne({where: {email}})
@@ -80,7 +80,7 @@ exports.forgotPassword = (req, res, next) => {
 	if (validationErrors.length) {
 		return res.json({ 'Error': validationErrors });
 	}
-	crypto.randomBytes(32, (err, buffer) => {
+	crypto.randomBytes(32, async (err, buffer) => {
 		if (err) {
 			console.log(err);
 			return res.json({ 'Mssg': 'Forgot pwd page' });

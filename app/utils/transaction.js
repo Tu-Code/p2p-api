@@ -13,19 +13,19 @@ let bal = 0
 let userObj = {}
 let user_choice = ''
 
-exports.fundAccount = (req, res, next) => {
-	const {email} = req.body
+exports.fundAccount = async (req, res, next) => {
+	const {amount, email} = req.body
 	const existingUser = await User.findOne({where: {email}})
 	if(existingUser){
 		userObj = existingUser
 		const validationErrors = [];
-		if (req.body.amount < 0) validationErrors.push('Invalid amount.');
-		if (validator.isEmpty(req.body.email)) validationErrors.push('User choice cannot be blank.');
+		if (amount < 0) validationErrors.push('Invalid amount.');
+		if (validator.isEmpty(email)) validationErrors.push('User choice cannot be blank.');
 		if (validationErrors.length) {
 			return res.json({ 'Error': validationErrors });
 		}
 		const form = _.pick(req.body,['email','amount','full_name']);
-		if (form.email == user.email){
+		if (form.email == existingUser.email){
 			form.metadata = {
 				full_name : form.full_name
 			}
@@ -39,7 +39,7 @@ exports.fundAccount = (req, res, next) => {
 					return;
 				}
 				resp = JSON.parse(body);
-				bal = user.balance
+				bal =  existingUser.balance
 				
 				return res.json({
 					"Checkout link" : resp.data.authorization_url,
@@ -56,14 +56,14 @@ exports.fundAccount = (req, res, next) => {
 	}
 };
 
-exports.transfer = (req, res, next) => {
+exports.transfer = async (req, res, next) => {
 
 	const {amount, email} = req.body
 	const existingUser = await User.findOne({where: {email}})
 	if(existingUser){
 		const validationErrors = [];
 		if (amount < 0) validationErrors.push('Invalid amount.');
-		if (validator.isEmpty(req.body.email)) validationErrors.push('User choice cannot be blank.');
+		if (validator.isEmpty(email)) validationErrors.push('User choice cannot be blank.');
 		if (validationErrors.length) {
 			return res.json({ 'Error': validationErrors });
 		}
@@ -72,7 +72,7 @@ exports.transfer = (req, res, next) => {
 			full_name : form.full_name
 		}
 
-		if (form.amount <= user.balance){
+		if (form.amount <=  existingUser.balance){
 			fundOrTrans = 'trans'
 			amountToRecord = form.amount
 			form.amount *= 100;
@@ -82,7 +82,7 @@ exports.transfer = (req, res, next) => {
 					return;
 				}
 				resp = JSON.parse(body);
-				bal = user.balance
+				bal =  existingUser.balance
 				
 				return res.json({
 					"Checkout link" : resp.data.authorization_url,
