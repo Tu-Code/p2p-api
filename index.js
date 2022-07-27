@@ -12,7 +12,7 @@ env.config();
 
 const webRoutes = require('./routes/web');
 const sequelize = require('./config/database');
-const errorController = require('./app/controllers/ErrorController');
+// const errorController = require('./app/controllers/ErrorController');
 // const csrfProtection = require('./app/middlewares/crsf');
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -45,7 +45,6 @@ app.use(session({
 // });
 
 app.use(webRoutes);
-app.use(errorController.pageNotFound);
 
 sequelize
 	// .sync({force : true})
