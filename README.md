@@ -29,7 +29,7 @@ Follow these steps to get started with the P2P-API:
 1. **Installation**: Clone the repository and install the necessary dependencies using npm.
 
    ```
-   git clone https://github.com/your-repo/p2p-api.git
+   git clone https://github.com/Tu-Code/p2p-api.git
    cd p2p-api
    npm install
    ```
