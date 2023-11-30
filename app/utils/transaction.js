@@ -4,6 +4,12 @@ const {
 	initializePayment,
 } = require('../../config/paystack')(request);
 
+const validator = require('validator');
+const Transaction = require('../models/Transaction');
+const _ = require('lodash');
+const { response } = require('express');
+const { method } = require('lodash');
+
 exports.pay = async (req, res, next) => {
     const {
         email,

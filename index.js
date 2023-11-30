@@ -7,11 +7,12 @@ const SequelizeStore = require("connect-session-sequelize")(session.Store); // i
 const cors = require('cors');
 const cookieParser = require('cookie-parser')
 
-const app = express();
-env.config();
-
 const webRoutes = require('./routes/web');
 const sequelize = require('./config/database');
+
+
+const app = express();
+env.config();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());

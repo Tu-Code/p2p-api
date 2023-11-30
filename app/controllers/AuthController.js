@@ -2,7 +2,15 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const User = require('../models/User');
+const Session = require('../models/Session');
+const Transaction = require('../models/Transaction');
 const jwt = require('jsonwebtoken');
+const { workerData } = require('worker_threads');
+const request = require('request');
+const {initializePayment, verifyPayment} = require('../../config/paystack')(request);
+const _ = require('lodash');
+const { response } = require('express');
+const { method } = require('lodash');
 
 exports.login = async (req, res, next) => {
 	try {
@@ -107,12 +115,6 @@ exports.users = async (req, res, next) => {
 		const users = await User.findAll(); // Fetch all users from the database
         
 		return res.json({ users });
-
-        // if (users && users.length > 0) {
-        //     return res.json({ users });
-        // } else {
-        //     return res.json({ 'Error': 'No users found.' });
-        // }
 	} 
 	catch (error) {
 		console.log(error)

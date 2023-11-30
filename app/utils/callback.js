@@ -1,8 +1,11 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const request = require('request');
-const {verifyPayment} = require('../../config/paystack')(request);
+const {initializePayment, verifyPayment} = require('../../config/paystack')(request);
 const _ = require('lodash');
+const transaction = require('./transaction');
+const { response } = require('express');
+const { method } = require('lodash');
 
 exports.callback = (req, res, next) => {
     const ref = req.query.reference;
