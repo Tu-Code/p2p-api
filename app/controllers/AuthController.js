@@ -2,15 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const User = require('../models/User');
-const Session = require('../models/Session');
-const Transaction = require('../models/Transaction');
 const jwt = require('jsonwebtoken');
-const { workerData } = require('worker_threads');
-const request = require('request');
-const {initializePayment, verifyPayment} = require('../../config/paystack')(request);
-const _ = require('lodash');
-const { response } = require('express');
-const { method } = require('lodash');
 
 exports.login = async (req, res, next) => {
 	try {
@@ -18,7 +10,7 @@ exports.login = async (req, res, next) => {
 		const existingUser = await User.findOne({where: {email}})
 		if(existingUser){
 			if(bcrypt.compare(existingUser.password, password)){
-				const token = jwt.sign({ id: user.id }, process.env.JWT_KEY)
+				const token = jwt.sign({ id: existingUser.id }, process.env.JWT_KEY)
 				return res.status(200).json({
 					data: {
 						token,
@@ -60,9 +52,22 @@ exports.signUp = async (req, res, next) => {
 			return res.json({ 'Error': 'User already exists.' });
 		}
 
-		const hashedPassword = await bcrypt.hash(password)
-		const user = new User({fullName, email, phone, balance: 0, password:hashedPassword})
-		return res.json({ 'Success': 'User created succesfully' , data: user});
+		const saltRounds = 10;
+        if (!password) {
+            return res.status(400).json({ 'Error': 'Password is missing.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+		const newUser = await User.create({
+            fullName,
+            email,
+            phone,
+            balance: 0,
+            password: hashedPassword,
+        });
+
+		return res.json({ 'Success': 'User created succesfully' , data: newUser});
 	}
 	catch (error) {
 		console.log(error)
@@ -97,3 +102,40 @@ exports.forgotPassword = (req, res, next) => {
 	});
 };
 
+exports.users = async (req, res, next) => {
+	try {
+		const users = await User.findAll(); // Fetch all users from the database
+        
+		return res.json({ users });
+
+        // if (users && users.length > 0) {
+        //     return res.json({ users });
+        // } else {
+        //     return res.json({ 'Error': 'No users found.' });
+        // }
+	} 
+	catch (error) {
+		console.log(error)
+		return res.status(500).json({
+			message: 'An error occured',
+			status: 'error',
+		})
+	}
+};
+
+exports.jwtGenerate = async (req, res, next) => {
+	try {
+		const jwtSecret = crypto.randomBytes(32).toString('hex');
+		console.log(
+			jwtSecret
+		)
+		return jwtSecret;
+	} 
+	catch (error) {
+		console.log(error)
+		return res.status(500).json({
+			message: 'An error occured',
+			status: 'error',
+		})
+	}
+};

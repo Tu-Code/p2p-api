@@ -7,13 +7,13 @@ const isAuth = require('../app/middlewares/isAuth');
 const User = require('../app/models/User')
 
 router.post('/login', AuthController.login);
+router.get('/users', AuthController.users);
+router.get('/jwt', AuthController.jwtGenerate)
 router.post('/logout', AuthController.logout);
 router.post('/sign-up', AuthController.signUp);
 router.post('/forgot-password', isAuth, AuthController.forgotPassword);
-router.post('/fund-account', isAuth, transaction.fundAccount);
-router.post('/transfer', isAuth, transaction.transfer);
+router.post('/pay', isAuth, transaction.pay);
 
-// router.get('/', AuthController.home);
 router.get('/callback', callback.callback);
 router.get('/locked-endpoint', isAuth, (req, res) => {
 	res.send("Logged in, welcome, user id is: " + req.user_id)

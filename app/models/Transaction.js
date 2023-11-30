@@ -1,6 +1,6 @@
-const bcrypt = require('bcryptjs');
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../../config/database');
+const User = require('./User')
 
 const Transaction = sequelize.define('transactions', {
     id: {
@@ -9,11 +9,11 @@ const Transaction = sequelize.define('transactions', {
         allowNull: false,
         primaryKey: true
     },
-    this_user: {
-        type: DataTypes.STRING,
+    user_id: {
+        type: DataTypes.INTEGER,
         allowNull: false
     },
-    user_choice: {
+    type: {
         type: DataTypes.STRING,
         allowNull: false
     },
@@ -26,4 +26,7 @@ const Transaction = sequelize.define('transactions', {
         allowNull: false
     }
 })
+
+Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+
 module.exports = Transaction;

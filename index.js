@@ -12,8 +12,6 @@ env.config();
 
 const webRoutes = require('./routes/web');
 const sequelize = require('./config/database');
-// const errorController = require('./app/controllers/ErrorController');
-// const csrfProtection = require('./app/middlewares/crsf');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -30,19 +28,6 @@ app.use(session({
 		table: "sessions",
 	}),
 }));
-// app.use(csrfProtection);
-
-// app.post('/test', csrfProtection, function (req, res) {
-// 	console.log(req.body);
-// 	res.send("Seen")
-// })
-
-
-// app.use((req, res, next) => {
-// 	res.locals.isAuthenticated = req.session.isLoggedIn;
-// 	res.locals.csrfToken = req.csrfToken();
-// 	next();
-// });
 
 app.use(webRoutes);
 

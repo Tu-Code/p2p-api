@@ -1,6 +1,7 @@
+require('dotenv').config();
+const MySecretKey = process.env.MY_SECRET_KEY;
+
 const paystack = (request) => {
-    const MySecretKey = 'Bearer sk_test_8f311084a17072f23b3d2a85544428bff469c060';
-    //sk_test_xxxx to be replaced by your own secret key
     const initializePayment = (form, mycallback) => {
         const option = {
             url : 'https://api.paystack.co/transaction/initialize',
@@ -17,20 +18,23 @@ const paystack = (request) => {
         request.post(option, callback);
     }
 
-    const verifyPayment = (ref,mycallback) => {
-        const option = {
-            url : 'https://api.paystack.co/transaction/verify/' + encodeURIComponent(ref),
-            headers : {
-                authorization: MySecretKey,
-                'content-type': 'application/json',
-                'cache-control': 'no-cache'
-           }
-        }
-        const callback = (error, response, body)=>{
+    const verifyPayment = (ref, mycallback) => {
+        const options = {
+            url: `https://api.paystack.co/transaction/verify/${ref}`,
+            method: 'GET',
+            headers: {
+                Authorization: MySecretKey,
+            }
+        };
+
+        const callback = (error, response, body) => {
             return mycallback(error, body);
-        }
-        request(option, callback);
-    }
+        };
+
+        request(options, callback);
+    };
+
+
     return {initializePayment, verifyPayment};
 }
 module.exports = paystack
